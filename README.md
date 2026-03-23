@@ -34,10 +34,10 @@ Natura2000 territory area to municipalities area.
 
 ### The application includes several key data processing functions:
 
-• `\_load_natura()`: Loads Natura2000 protected areas data with caching
-• `\_load_admin()`: Loads administrative boundaries data with caching
-• `compute_ratio()`: Calculates spatial ratios between datasets
-• `\_gdf_to_geojson()`: Converts GeoDataFrames to GeoJSON format
+- `\_load_natura()`: Loads Natura2000 protected areas data with caching
+- `\_load_admin()`: Loads administrative boundaries data with caching
+- `compute_ratio()`: Calculates spatial ratios between datasets
+- `\_gdf_to_geojson()`: Converts GeoDataFrames to GeoJSON format
 
 ## Deployment
 
