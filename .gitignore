@@ -11,3 +11,9 @@ wheels/
 
 # Streamlit
 .streamlit
+
+# Aider
+.aider*
+
+# CSpell
+cspell.json

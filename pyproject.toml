@@ -6,7 +6,6 @@ readme = "README.md"
 authors = [{ name = "Jēkabs Balodis", email = "signalingpigeon@duck.com" }]
 requires-python = ">=3.14"
 dependencies = [
-  "feedparser>=6.0.12",
   "geopandas>=1.1.3",
   "httpx>=0.28.1",
   "py7zr>=1.1.0",
