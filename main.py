@@ -14,7 +14,16 @@ import py7zr
 import pydeck as pdk
 import streamlit as st
 
-st.set_page_config(page_title='Natura ratio', page_icon='🏞️', layout='wide')
+st.set_page_config(
+    page_title='Natura ratio',
+    page_icon='🏞️',
+    layout='wide',
+    menu_items={
+        'Get help': 'https://mastodon.social/@khorticija',
+        'Report a bug': 'https://codeberg.org/clear9550/natura-ratio/issues',
+        'About': None,
+    },
+)
 
 col1, col2 = st.columns([0.7, 0.3])
 
