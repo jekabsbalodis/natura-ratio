@@ -194,7 +194,7 @@ st.divider()
 
 st.caption(
     body=(
-        'Dati no Latvijas atvērto datu portāla | '
+        'Dati no Latvijas Atvērto datu portāla | '
         '[Natura2000 teritorijas]'
         '(https://data.gov.lv/dati/lv/dataset/lv-natura2000-data) | '
         '[Novadu robežas]'
