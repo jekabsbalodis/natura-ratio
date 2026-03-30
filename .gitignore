@@ -15,5 +15,5 @@ wheels/
 # Aider
 .aider*
 
-# CSpell
-cspell.json
+# Coverage
+.coverage
