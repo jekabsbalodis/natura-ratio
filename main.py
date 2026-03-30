@@ -14,33 +14,6 @@ import py7zr
 import pydeck as pdk
 import streamlit as st
 
-st.set_page_config(
-    page_title='Natura ratio',
-    page_icon='🏞️',
-    layout='wide',
-    menu_items={
-        'Get help': 'https://mastodon.social/@khorticija',
-        'Report a bug': 'https://codeberg.org/clear9550/natura-ratio/issues',
-        'About': None,
-    },
-)
-
-col1, col2 = st.columns([0.7, 0.3])
-
-with col1:
-    st.title('Natura2000 teritoriju platības pagastos un novados')
-
-with col2:
-    admin_level = st.pills(
-        'Administratīvais iedalījums',
-        ['Pagasti', 'Novadi'],
-        default='Pagasti',
-        help=(
-            'Izvēlies pēc kāda administratīvā iedalījuma attēlot datus. '
-            '"Novadi", iekļauj arī pilsētas.'
-        ),
-    )
-
 
 @st.cache_data(show_spinner='Ielādē datus par Natura2000 teritorijām...')
 def _load_natura():
@@ -95,7 +68,9 @@ def compute_ratio(admin_level) -> tuple[gpd.GeoDataFrame, ...]:
 
     natura_metric['total_site_area'] = natura_metric.geometry.area
 
-    overlap = admin_metric.overlay(natura_metric, how='intersection')
+    overlap = admin_metric.overlay(
+        natura_metric, how='intersection', keep_geom_type=False
+    )
     overlap['nature_area'] = overlap.geometry.area
 
     overlap['nature_ratio_pct'] = (
@@ -120,95 +95,125 @@ def compute_ratio(admin_level) -> tuple[gpd.GeoDataFrame, ...]:
     return admin_metric.to_crs(epsg=4326), natura_gdf.to_crs(epsg=4326), overlap
 
 
-(admin_wgs, natura_wgs, overlap) = compute_ratio(admin_level)
-
-
 def _gdf_to_geojson(gdf):
     return json.loads(gdf.to_json())
 
 
-admin_layer = pdk.Layer(
-    'GeoJsonLayer',
-    data=_gdf_to_geojson(admin_wgs),
-    stroked=True,
-    filled=True,
-    get_fill_color='[20, 80 + nature_ratio * 170, 80, 180]',
-    get_line_color=[255, 255, 255, 200],
-    line_width_min_pixels=1,
-    pickable=True,
-)
-
-natura_layer = pdk.Layer(
-    'GeoJsonLayer',
-    data=_gdf_to_geojson(natura_wgs),
-    stroked=True,
-    filled=True,
-    get_fill_color=[255, 200, 0, 180],
-    get_line_color=[200, 150, 0, 255],
-    line_width_min_pixels=1,
-    pickable=False,
-)
-
-view_state = pdk.ViewState(
-    latitude=56.9,
-    longitude=24.6,
-    zoom=6.5,
-    pitch=0,
-)
-
-name_col = 'LABEL' if admin_level == 'Pagasti' else 'NOSAUKUMS'
-
-tooltip_html = (
-    f'<b>{{{name_col}}}</b><br/>Natura2000 pārklājums: <b>{{nature_ratio_pct}}%</b>'
-)
-
-deck = pdk.Deck(
-    layers=[admin_layer, natura_layer],
-    initial_view_state=view_state,
-    map_style='light',
-    tooltip={
-        'html': tooltip_html,
-        'style': {'backgroundColor': 'white', 'color': 'black', 'padding': '8px'},
-    },
-)
-col3, col4 = st.columns([0.65, 0.35])
-
-with col3:
-    st.pydeck_chart(deck, height=700)
-
-
-with col4:
-    admin_name_col = 'LABEL' if admin_level == 'Pagasti' else 'NOSAUKUMS'
-    admin_name_col_label = 'Pagasts' if admin_level == 'Pagasti' else 'Novads'
-    nature_ratio_pct_label = (
-        '% no pagasta' if admin_level == 'Pagasti' else '% no novada'
+def _main():
+    st.set_page_config(
+        page_title='Natura ratio',
+        page_icon='🏞️',
+        layout='wide',
+        menu_items={
+            'Get help': 'https://mastodon.social/@khorticija',
+            'Report a bug': 'https://codeberg.org/clear9550/natura-ratio/issues',
+            'About': None,
+        },
     )
-    st.dataframe(
-        overlap[[admin_name_col, 'text', 'nature_ratio_pct', 'site_ratio_pct']]
-        .rename(
-            columns={
-                admin_name_col: admin_name_col_label,
-                'text': 'Natura2000 teritorija',
-                'nature_ratio_pct': nature_ratio_pct_label,
-                'site_ratio_pct': '% no Natura2000 ter.',
-            }
+
+    col1, col2 = st.columns([0.7, 0.3])
+
+    with col1:
+        st.title('Natura2000 teritoriju platības pagastos un novados')
+
+    with col2:
+        admin_level = st.pills(
+            'Administratīvais iedalījums',
+            ['Pagasti', 'Novadi'],
+            default='Pagasti',
+            help=(
+                'Izvēlies pēc kāda administratīvā iedalījuma attēlot datus. '
+                '"Novadi", iekļauj arī pilsētas.'
+            ),
         )
-        .sort_values('Natura2000 teritorija', ascending=True)
-        .reset_index(drop=True),
-        hide_index=True,
-        height=700,
+
+    (admin_wgs, natura_wgs, overlap) = compute_ratio(admin_level)
+
+    admin_layer = pdk.Layer(
+        'GeoJsonLayer',
+        data=_gdf_to_geojson(admin_wgs),
+        stroked=True,
+        filled=True,
+        get_fill_color='[20, 80 + nature_ratio * 170, 80, 180]',
+        get_line_color=[255, 255, 255, 200],
+        line_width_min_pixels=1,
+        pickable=True,
     )
 
-st.divider()
-
-st.caption(
-    body=(
-        'Dati no Latvijas Atvērto datu portāla | '
-        '[Natura2000 teritorijas]'
-        '(https://data.gov.lv/dati/lv/dataset/lv-natura2000-data) | '
-        '[Novadu robežas]'
-        '(https://data.gov.lv/dati/lv/dataset/atr) | '
-        '[Pagastu robežas]'
-        '(https://data.gov.lv/dati/lv/dataset/administrativo-teritoriju-karte)'
+    natura_layer = pdk.Layer(
+        'GeoJsonLayer',
+        data=_gdf_to_geojson(natura_wgs),
+        stroked=True,
+        filled=True,
+        get_fill_color=[255, 200, 0, 180],
+        get_line_color=[200, 150, 0, 255],
+        line_width_min_pixels=1,
+        pickable=False,
     )
-)
+
+    view_state = pdk.ViewState(
+        latitude=56.9,
+        longitude=24.6,
+        zoom=6.5,
+        pitch=0,
+    )
+
+    name_col = 'LABEL' if admin_level == 'Pagasti' else 'NOSAUKUMS'
+
+    tooltip_html = (
+        f'<b>{{{name_col}}}</b><br/>Natura2000 pārklājums: <b>{{nature_ratio_pct}}%</b>'
+    )
+
+    deck = pdk.Deck(
+        layers=[admin_layer, natura_layer],
+        initial_view_state=view_state,
+        map_style='light',
+        tooltip={
+            'html': tooltip_html,
+            'style': {'backgroundColor': 'white', 'color': 'black', 'padding': '8px'},
+        },
+    )
+    col3, col4 = st.columns([0.65, 0.35])
+
+    with col3:
+        st.pydeck_chart(deck, height=700)
+
+    with col4:
+        admin_name_col = 'LABEL' if admin_level == 'Pagasti' else 'NOSAUKUMS'
+        admin_name_col_label = 'Pagasts' if admin_level == 'Pagasti' else 'Novads'
+        nature_ratio_pct_label = (
+            '% no pagasta' if admin_level == 'Pagasti' else '% no novada'
+        )
+        st.dataframe(
+            overlap[[admin_name_col, 'text', 'nature_ratio_pct', 'site_ratio_pct']]
+            .rename(
+                columns={
+                    admin_name_col: admin_name_col_label,
+                    'text': 'Natura2000 teritorija',
+                    'nature_ratio_pct': nature_ratio_pct_label,
+                    'site_ratio_pct': '% no Natura2000 ter.',
+                }
+            )
+            .sort_values('Natura2000 teritorija', ascending=True)
+            .reset_index(drop=True),
+            hide_index=True,
+            height=700,
+        )
+
+    st.divider()
+
+    st.caption(
+        body=(
+            'Dati no Latvijas Atvērto datu portāla | '
+            '[Natura2000 teritorijas]'
+            '(https://data.gov.lv/dati/lv/dataset/lv-natura2000-data) | '
+            '[Novadu robežas]'
+            '(https://data.gov.lv/dati/lv/dataset/atr) | '
+            '[Pagastu robežas]'
+            '(https://data.gov.lv/dati/lv/dataset/administrativo-teritoriju-karte)'
+        )
+    )
+
+
+if __name__ == '__main__':
+    _main()
