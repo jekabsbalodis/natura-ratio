@@ -105,8 +105,8 @@ def _main():
         page_icon='🏞️',
         layout='wide',
         menu_items={
-            'Get help': 'https://mastodon.social/@khorticija',
-            'Report a bug': 'https://codeberg.org/clear9550/natura-ratio/issues',
+            'Get help': 'https://gts.balodis.id.lv/@jekabs',
+            'Report a bug': None,
             'About': None,
         },
     )
