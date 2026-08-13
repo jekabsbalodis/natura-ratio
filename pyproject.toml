@@ -11,7 +11,7 @@ dependencies = [
   "py7zr>=1.1.0",
   "pyarrow>=23.0.1",
   "pydeck>=0.9.1",
-  "streamlit>=1.55.0",
+  "streamlit>=1.61.1",
 ]
 
 [dependency-groups]
